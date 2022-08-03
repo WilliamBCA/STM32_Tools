@@ -1,0 +1,36 @@
+# Pyserial should be installed for the script to work
+import serial
+import time
+
+
+# Find open serial port
+# This function is windows specific
+def identifyPorts():
+    ports = ['COM%s' % (i + 1) for i in range(256)]
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+    if result:
+        initDFU(result)
+
+
+# Put device into DFU mode
+def initDFU(portNames):
+    for i in portNames:
+        with serial.Serial(i, 11520, timeout=1) as ser:
+            ser.write(b'DFU\r')
+        with serial.Serial(i, 11520, timeout=1) as ser:
+            print(i, "has been put into DFU mode!")
+            ser.write(b'DFU\r')
+
+
+# Main loop
+if __name__ == "__main__":
+    while (True):
+        identifyPorts()
+        time.sleep(2)
