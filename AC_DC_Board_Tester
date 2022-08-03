@@ -1,0 +1,45 @@
+# Pyserial should be installed for the script to work
+import serial
+import time
+
+outputs = ["p1", "p2", "p3", "p4"]
+lastres = ""
+
+
+# Identify open ports
+def identifyPorts():
+    ports = ['COM%s' % (i + 1) for i in range(256)]
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+    if result and result != lastres:
+        initDFU(result)
+    return result
+
+
+# Test ports
+def initDFU(portNames):
+    for i in portNames:
+        for p in outputs:
+            with serial.Serial(i, 11520, timeout=1) as ser:
+                ser.write(str.encode(f'{p} on\r'))
+            with serial.Serial(i, 11520, timeout=1) as ser:
+                print(i, "has been tested")
+                ser.write(str.encode(f'{p} on\r'))
+            time.sleep(1)
+        with serial.Serial(i, 11520, timeout=1) as ser:
+            ser.write(b'all off\r')
+        with serial.Serial(i, 11520, timeout=1) as ser:
+            ser.write(b'all off\r')
+
+
+# Main loop
+if __name__ == "__main__":
+    while True:
+        time.sleep(2)
+        lastres = identifyPorts()
